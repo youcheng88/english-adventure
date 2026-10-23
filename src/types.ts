@@ -1,5 +1,5 @@
 export type Difficulty = 'easy' | 'normal' | 'hard';
-export type GameId = 'picture' | 'memory' | 'listening' | 'spelling' | 'speed' | 'sentence' | 'reading' | 'adventure';
+export type GameId = 'picture' | 'memory' | 'listening' | 'spelling' | 'speed' | 'sentence' | 'reading' | 'adventure' | 'shooter';
 export interface Question { id: string; grade: number; difficulty: Difficulty; topic: string; questionType: 'vocabulary' | 'sentence' | 'reading' | 'alphabet'; question: string; choices: string[]; correctAnswer: string; explanation: string; image: string; audioText: string; translation: string; passageId?: string; passage?: string; glossary?: { word: string; meaning: string }[] }
 export interface Settings { grade: number; difficulty: Difficulty; topic: string; sound: boolean; motion: boolean; rate: number }
 export interface Round { question: Question; mode: GameId }
