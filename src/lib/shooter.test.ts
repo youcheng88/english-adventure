@@ -1,13 +1,55 @@
 import { describe, it, expect } from 'vitest';
 import { shooterReducer, shooterSeconds, targetPositions } from './shooter';
 import type { ShooterState } from './shooter';
-import { recordResult, freshProgress, validateProgress, badges } from './storage';
+import { recordResult, freshProgress, validateProgress, badges, resultBestKey } from './storage';
 import { scoreAnswer } from './engine';
 import type { Result } from '../types';
 
 const initial: ShooterState = { phase: 'ready', remaining: 30000, shot: null };
 const shot = { answer: 'apple', x: 25, y: 35 };
 describe('bubble shooter round lifecycle', () => {
+  it('lets learners choose an untimed round, but locks pace after starting', () => {
+    const relaxed = shooterReducer(initial, { type: 'pace', untimed: true });
+    const playing = shooterReducer(relaxed, { type: 'start' });
+    expect(shooterReducer(playing, { type: 'tick', milliseconds: 600000 })).toBe(playing);
+    expect(shooterReducer(playing, { type: 'pace', untimed: false })).toBe(playing);
+    expect(shooterReducer(playing, { type: 'fire', shot }).phase).toBe('firing');
+  });
+  it('can switch back to a timed challenge before starting', () => {
+    const relaxed = shooterReducer(initial, { type: 'pace', untimed: true });
+    const challenge = shooterReducer(relaxed, { type: 'pace', untimed: false });
+    expect(shooterReducer(shooterReducer(challenge, { type: 'start' }), { type: 'tick', milliseconds: 30000 }).phase).toBe('finished');
+  });
+  it('repairs a mistake only with the correct word, without replacing the first answer', () => {
+    const wrong: ShooterState = { ...initial, phase: 'finished', shot: { ...shot, answer: 'cat' } };
+    const action = { type: 'repair', answer: 'apple', correctAnswer: 'apple' } as const;
+    expect(shooterReducer(wrong, { ...action, answer: 'dog' })).toBe(wrong);
+    const repaired = shooterReducer(wrong, action);
+    expect(repaired.repaired).toBe(true);
+    expect(repaired.shot?.answer).toBe('cat');
+    expect(repaired.phase).toBe('finished');
+    expect(shooterReducer(repaired, action)).toBe(repaired);
+    expect(shooterReducer(initial, action)).toBe(initial);
+    expect(shooterReducer({ ...wrong, shot }, action).repaired).toBeUndefined();
+  });
+  it('allows repair after timeout and keeps the timeout answer empty', () => {
+    const expired: ShooterState = { ...initial, phase: 'finished', remaining: 0 };
+    const repaired = shooterReducer(expired, { type: 'repair', answer: 'apple', correctAnswer: 'apple' });
+    expect(repaired.repaired).toBe(true);
+    expect(repaired.shot).toBeNull();
+    expect(repaired.remaining).toBe(0);
+  });
+  it('separates relaxed best scores and keeps legacy timed scores and history', () => {
+    const legacy: Result = { id: 'legacy', grade: 1, game: 'shooter', difficulty: 'easy', score: 500, stars: 3, seconds: 25, date: '2026-10-23', answers: [] };
+    const relaxed: Result = { ...legacy, id: 'relaxed', score: 700, shooterPace: 'relaxed' };
+    const p = validateProgress(JSON.parse(JSON.stringify(recordResult(recordResult(freshProgress(), legacy), relaxed))));
+    expect(p.best[resultBestKey(legacy)]).toBe(500);
+    expect(p.best[resultBestKey(relaxed)]).toBe(700);
+    expect(p.history.map(r => r.shooterPace)).toEqual([undefined, 'relaxed']);
+    expect(resultBestKey({ ...legacy, shooterPace: 'challenge' })).toBe(resultBestKey(legacy));
+    expect(resultBestKey({ ...relaxed, game: 'picture' })).toBe('1-picture-easy');
+    expect(validateProgress({ ...p, history: [{ ...relaxed, shooterPace: 'invalid' }] }).history).toEqual([]);
+  });
   it('does not accept a shot or spend time before starting', () => {
     expect(shooterReducer(initial, { type: 'fire', shot })).toBe(initial);
     expect(shooterReducer(initial, { type: 'tick', milliseconds: 5000 })).toBe(initial);

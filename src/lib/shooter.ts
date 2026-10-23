@@ -6,19 +6,25 @@ export interface ShooterState {
   phase: 'ready' | 'playing' | 'paused' | 'firing' | 'finished';
   remaining: number;
   shot: Shot | null;
+  untimed?: boolean;
+  repaired?: boolean;
 }
 export type ShooterAction =
   | { type: 'start' | 'pause' | 'resume' | 'finish' }
   | { type: 'tick'; milliseconds: number }
+  | { type: 'pace'; untimed: boolean }
+  | { type: 'repair'; answer: string; correctAnswer: string }
   | { type: 'fire'; shot: Shot };
 
 export function shooterReducer(state: ShooterState, action: ShooterAction): ShooterState {
+  if (action.type === 'pace' && state.phase === 'ready') return { ...state, untimed: action.untimed };
+  if (action.type === 'repair' && state.phase === 'finished' && !state.repaired && state.shot?.answer !== action.correctAnswer && action.answer === action.correctAnswer) return { ...state, repaired: true };
   if (action.type === 'start' && state.phase === 'ready') return { ...state, phase: 'playing' };
   if (action.type === 'pause' && state.phase === 'playing') return { ...state, phase: 'paused' };
   if (action.type === 'resume' && state.phase === 'paused') return { ...state, phase: 'playing' };
   if (action.type === 'fire' && state.phase === 'playing') return { ...state, phase: 'firing', shot: action.shot };
   if (action.type === 'finish' && state.phase === 'firing') return { ...state, phase: 'finished' };
-  if (action.type === 'tick' && state.phase === 'playing' && Number.isFinite(action.milliseconds) && action.milliseconds > 0) {
+  if (action.type === 'tick' && state.phase === 'playing' && !state.untimed && Number.isFinite(action.milliseconds) && action.milliseconds > 0) {
     const remaining = Math.max(0, state.remaining - action.milliseconds);
     return { ...state, remaining, phase: remaining ? 'playing' : 'finished' };
   }
