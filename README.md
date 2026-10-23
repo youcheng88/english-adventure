@@ -2,6 +2,10 @@
 
 台灣國小一至六年級英文遊戲網站。React + TypeScript + Vite，純靜態網站，不用登入、付費 API 或 API 金鑰。原創吉祥物「小芽」陪孩子探索英文。
 
+**正式網站：<https://youcheng88.github.io/english-adventure/>**
+
+2026-10-23 已部署並實際驗證首頁、地圖與記錄重整、完整答題及儲存。[首次成功部署](https://github.com/youcheng88/english-adventure/actions/runs/39911417242)。
+
 ## 開始遊玩
 
 在首頁選年級、難度與主題，再選遊戲。年級是建議程度，孩子可自由選擇其他年級；並非出版社進度或能力測驗。手機點選卡片即可排列，桌面也可拖曳。Tab 移動焦點，Enter／空白鍵啟動按鈕；右上設定可減少動畫。音效與手動英文朗讀分開控制。

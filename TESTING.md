@@ -37,6 +37,10 @@ Windows 受限執行環境第一次 Vite／Vitest 讀取 realpath 出現 EPERM�
 
 ## 手動維護驗收
 
+正式部署補充：GitHub Actions 執行 [39911417242](https://github.com/youcheng88/english-adventure/actions/runs/39911417242) 的 build／deploy 均成功，雲端再次通過題庫驗證、lint、245 項測試與建置。公開站 `https://youcheng88.github.io/english-adventure/` 已實測 `#map`、`#progress` 重新整理均載入正確頁面；完成一場圖片配對 5/5、100%、500 分、3 星，返回首頁重整後仍保留 3 星。正式站測試資料存在測試瀏覽器，其他學生首次開啟為獨立新進度。
+
+GitHub 顯示部分官方 Action 執行環境的 Node 20 遷移提示；實際強制以 Node 24 執行成功。專案建置使用 Node 22。這些是上游 Action 的相容性通知，非本站建置錯誤。
+
 新增教材或修改遊戲後，除上述自動檢查，還應：
 
 1. 各模式完成一次，至少刻意答錯、重播、提示、重開與回首頁各一次。
