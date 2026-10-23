@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.sites-runtime/
+.tools/
+*.tar.gz
+test-results/
+*.tsbuildinfo
+.openai/

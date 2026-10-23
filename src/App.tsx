@@ -1,0 +1,25 @@
+import {useEffect,useState} from 'react';
+import {BookOpen,Map,Footprints,Volume2,VolumeX,Star,Settings as SettingsIcon,Leaf} from 'lucide-react';
+import type {GameId,Result,Settings} from './types';
+import {readProgress,recordResult,writeProgress} from './lib/storage';
+import {accuracy} from './lib/engine';
+import {Home} from './components/Home';
+import {AdventureMap} from './components/AdventureMap';
+import {ProgressPage} from './components/ProgressPage';
+import {Results} from './components/Results';
+import {GameSession} from './games/GameSession';
+import type {SessionSpec} from './games/GameSession';
+function initialPage(){return ['map','progress'].includes(location.hash.slice(1))?location.hash.slice(1):'home';}
+export default function App(){
+ const [progress,setProgress]=useState(readProgress),[page,setPage]=useState(initialPage),[session,setSession]=useState<SessionSpec|null>(null),[result,setResult]=useState<Result|null>(null),[storageFailed,setStorageFailed]=useState(false);
+ useEffect(()=>{setStorageFailed(!writeProgress(progress));},[progress]);
+ useEffect(()=>{document.documentElement.dataset.motion=progress.settings.motion?'on':'off';},[progress.settings.motion]);
+ useEffect(()=>{const handle=()=>{setPage(initialPage());setSession(null);setResult(null);window.scrollTo(0,0);};window.addEventListener('hashchange',handle);return()=>window.removeEventListener('hashchange',handle);},[]);
+ function settings(s:Partial<Settings>){setProgress(p=>({...p,settings:{...p.settings,...s}}));}
+ function navigate(next:string){setSession(null);setResult(null);setPage(next);history.replaceState(null,'',`#${next}`);window.scrollTo(0,0);}
+ function launch(game:GameId,daily=false,level?:number,reviewIds?:string[]){if(game==='adventure'&&!daily&&!level&&!reviewIds){navigate('map');return;}setResult(null);setSession({id:crypto.randomUUID(),game,level,daily,reviewIds});setPage('play');history.replaceState(null,'','#home');window.scrollTo(0,0);}
+ function restart(){if(session){setResult(null);setSession({...session,id:crypto.randomUUID()});setPage('play');window.scrollTo(0,0);}}
+ function finish(r:Result){setProgress(p=>recordResult(p,r));setResult(r);setPage('result');window.scrollTo(0,0);}
+ function review(ids:string[]){if(ids.length)launch('picture',false,undefined,ids);}
+ return <><a href="#main" className="skip-link" onClick={e=>{e.preventDefault();document.getElementById("main")?.focus();}}>跳到主要內容</a><header className="site-header"><div className="header-inner"><button className="brand" onClick={()=>navigate('home')} aria-label="English Adventure 英文冒險樂園首頁"><span className="brand-icon"><Leaf size={27}/></span><span><strong>English Adventure<span className="brand-dot">.</span></strong><small>英文冒險樂園</small></span></button><nav aria-label="主要選單"><button className={page==='home'?'active':''} onClick={()=>navigate('home')}><BookOpen size={17}/><span>遊戲樂園</span></button><button className={page==='map'?'active':''} onClick={()=>navigate('map')}><Map size={17}/><span>冒險地圖</span></button><button className={page==='progress'?'active':''} onClick={()=>navigate('progress')}><Footprints size={17}/><span>學習足跡</span></button></nav><div className="header-tools"><span className="star-total"><Star size={17} fill="currentColor"/> {progress.totalStars}</span><button className="icon-button" aria-label={progress.settings.sound?'關閉遊戲音效':'開啟遊戲音效'} title="遊戲音效" onClick={()=>settings({sound:!progress.settings.sound})}>{progress.settings.sound?<Volume2 size={19}/>:<VolumeX size={19}/>}</button><details className="settings-menu"><summary aria-label="顯示偏好設定"><SettingsIcon size={19}/></summary><div className="settings-popover"><label><input type="checkbox" checked={!progress.settings.motion} onChange={e=>settings({motion:!e.target.checked})}/> 減少動畫</label><p>音效開關不影響手動播放英文發音。</p></div></details></div></div></header><main id="main" className="main-shell" tabIndex={-1}>{storageFailed&&<p className="notice" role="alert">瀏覽器無法保存資料（可能儲存空間不足或已封鎖）。本次仍可遊玩，但重新整理後可能失去進度。</p>}{page==='home'&&<Home progress={progress} onChange={settings} onStart={launch} onNavigate={navigate}/>}{page==='map'&&<AdventureMap progress={progress} onChange={settings} onLevel={l=>launch('adventure',false,l)} onHome={()=>navigate('home')}/>}{page==='progress'&&<ProgressPage progress={progress} onChange={settings} onReview={review}/>}{page==='play'&&session&&<GameSession key={session.id} spec={session} settings={progress.settings} onFinish={finish} onExit={()=>navigate('home')} onRestart={restart} onRate={rate=>settings({rate})}/>}{page==='result'&&result&&<Results result={result} best={progress.best[`${result.grade}-${result.game}-${result.difficulty}`]??result.score} onHome={()=>navigate('home')} onRestart={restart} onReview={review} onNext={result.level&&result.level<5&&accuracy(result.answers)>=60?()=>launch('adventure',false,result.level!+1):undefined}/>}</main><footer><div><span><Leaf size={17}/> English Adventure 英文冒險樂園</span><span>讓好奇心，帶著英文一起長大。</span></div><p>不需登入，不蒐集姓名或學校。學習記錄僅存在目前瀏覽器；清除瀏覽器資料可能導致記錄消失。</p><small>原創教材與小芽吉祥物 · 建議程度可自由調整 · 英文語音依裝置支援而定</small></footer></>;
+}

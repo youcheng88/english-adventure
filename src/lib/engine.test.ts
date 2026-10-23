@@ -1,0 +1,26 @@
+import {describe,it,expect} from 'vitest';
+import {bank,selectQuestions,choiceOptions,adventureRounds,makeRounds,normalize,starsFor,scoreAnswer,accuracy,games,shuffle} from './engine';
+import {freshProgress,recordResult,validateProgress} from './storage';
+import type {Difficulty,Result} from '../types';
+describe('complete curriculum and game compatibility',()=>{
+ for(const grade of [1,2,3,4,5,6])for(const difficulty of ['easy','normal','hard']as Difficulty[])for(const game of games){it(`grade ${grade}, ${difficulty}, ${game.id}`,()=>{
+ const {questions}=selectQuestions(grade,difficulty,game.id);
+ expect(questions.length).toBeGreaterThan(0);expect(new Set(questions.map(q=>q.id)).size).toBe(questions.length);
+ for(const r of makeRounds(questions,game.id)){expect(r.question.grade).toBe(grade);if(!['sentence','spelling','memory'].includes(r.mode)){const options=choiceOptions(r.question,r.mode,difficulty);expect(new Set(options).size).toBe(options.length);expect(options.length).toBeGreaterThan(1);expect(options).toContain(r.mode==='listening'?r.question.translation:r.question.correctAnswer);}}
+ });}
+ for(const grade of [1,2,3,4,5,6])for(const difficulty of ['easy','normal','hard']as Difficulty[])for(const level of [1,2,3,4,5])it(`mixed adventure grade ${grade} ${difficulty} level ${level}`,()=>{const rounds=adventureRounds(grade,difficulty,level);expect(rounds.length).toBeGreaterThanOrEqual(5);expect(new Set(rounds.map(r=>r.question.id)).size).toBe(rounds.length);expect(new Set(rounds.map(r=>r.mode)).size).toBe(3);if(difficulty==='easy')expect(rounds.every(r=>r.question.difficulty==='easy')).toBe(true);});
+ it('empty data is safe, missing topics use an explicit fallback',()=>{expect(selectQuestions(1,'easy','picture','all',[]).questions).toEqual([]);const r=selectQuestions(1,'easy','reading','不存在的主題');expect(r.expanded).toBe(true);expect(r.questions.length).toBeGreaterThan(0);});
+ it('sparse topics stay within the selected topic and never duplicate',()=>{const q=bank.find(q=>q.questionType==='vocabulary')!;const result=selectQuestions(1,'hard','picture',q.topic,[q]);expect(result.questions).toEqual([q]);});
+ it('has at least 60 original records per grade',()=>{for(let grade=1;grade<=6;grade++)expect(bank.filter(q=>q.grade===grade).length).toBeGreaterThanOrEqual(60);expect(new Set(bank.map(q=>q.id)).size).toBe(bank.length);});
+ it('shuffle preserves repeated tokens but not input order with deterministic RNG',()=>{const a=['a','p','p','l','e'];expect(shuffle(a,()=>0).sort()).toEqual([...a].sort());expect(a).toEqual(['a','p','p','l','e']);});
+});
+describe('scoring and durable progress',()=>{
+ const result:Result={id:'test-session',grade:2,game:'adventure',difficulty:'easy',answers:[{questionId:'g2-v01',given:'mother',correct:true,mode:'picture'},{questionId:'g2-v02',given:'wrong',correct:false,mode:'picture'},{questionId:'g2-s01',given:'Hello.',correct:true,mode:'sentence'}],score:200,seconds:20,stars:1,date:'2026-10-23T01:00:00+08:00',level:1};
+ it('computes stars at exact boundaries, no stars for zero answers',()=>{expect(starsFor(0,0)).toBe(0);expect(starsFor(0,5)).toBe(0);expect(starsFor(1,5)).toBe(1);expect(starsFor(7,10)).toBe(2);expect(starsFor(9,10)).toBe(3);expect(accuracy(result.answers)).toBe(67);});
+ it('caps speed combo bonus and never scores wrong answers',()=>{expect(scoreAnswer(false,8,'speed')).toBe(0);expect(scoreAnswer(true,3,'speed')).toBe(160);expect(scoreAnswer(true,100,'speed')).toBe(200);expect(scoreAnswer(true,10,'picture')).toBe(100);});
+ it('keeps grade progress separate, deduplicates saves, and retains best stars',()=>{const p=recordResult(freshProgress(),result);expect(p.levels['2'][0]).toBe(1);expect(p.levels['1']).toBeUndefined();expect(p.mistakes).toContain('g2-v02');expect(p.totalPlayed).toBe(1);expect(recordResult(p,result)).toBe(p);const better=recordResult(p,{...result,id:'better',stars:3});const later=recordResult(better,{...result,id:'later'});expect(later.levels['2'][0]).toBe(3);});
+ it('does not unlock on failed adventure and clears a corrected mistake',()=>{const p=recordResult(freshProgress(),{...result,answers:[{questionId:'g2-v01',given:'wrong',correct:false,mode:'picture'}],stars:0});expect(p.levels['2']).toBeUndefined();expect(p.mistakes).toContain('g2-v01');expect(recordResult(p,{...result,id:'retry',answers:[result.answers[0]]}).mistakes).not.toContain('g2-v01');});
+ it('awards the daily bonus once per browser day',()=>{const r={...result,daily:true,answers:[result.answers[0]],stars:3};const first=recordResult(freshProgress(),r);const second=recordResult(first,{...r,id:'again'});expect(first.coins).toBe(50);expect(second.coins).toBe(80);expect(second.daily).toHaveLength(1);});
+ it('recovers corrupt persisted data and preserves valid data across JSON round trips',()=>{expect(validateProgress(null)).toEqual(freshProgress());expect(validateProgress({version:1,settings:{grade:99},history:[null],coins:-5})).toEqual(freshProgress());const p=recordResult(freshProgress(),result);expect(validateProgress(JSON.parse(JSON.stringify(p)))).toEqual(p);});
+ it('normalizes whitespace but preserves capitalization and punctuation for learning',()=>{expect(normalize('  I   am happy. ')).toBe('I am happy.');expect(normalize('cat')).not.toBe(normalize('Cat'));});
+});
