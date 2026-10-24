@@ -28,6 +28,14 @@ export function selectQuestions(grade:number,difficulty:Difficulty,game:GameId,t
  return { questions:[...preferred,...extra].slice(0,count), expanded:expanded||preferred.length<Math.min(count,pool.length) };
 }
 export function makeRounds(questions:Question[],game:GameId):Round[] { return questions.map((question,i)=>({question,mode:game==='adventure'?(question.questionType==='sentence'?'sentence':question.questionType==='alphabet'?'speed':i%2?'listening':'picture'):game})); }
+export function reviewRounds(ids: string[], game: GameId, source = bank): Round[] {
+ return [...new Set(ids)].flatMap(id => {
+  const question = source.find(q => q.id === id);
+  if (!question) return [];
+  const mode: GameId = question.questionType==='sentence'?'sentence':question.questionType==='reading'?'reading':question.questionType==='alphabet'?'speed':game==='shooter'?'shooter':'picture';
+  return [{ question, mode }];
+ });
+}
 export function adventureRounds(grade:number,difficulty:Difficulty,level:number):Round[] {
  const rank={easy:0,normal:1,hard:2};
  const pool=bank.filter(q=>q.grade===grade&&q.questionType!=='reading'&&q.questionType!=='alphabet'&&rank[q.difficulty]<=rank[difficulty]);

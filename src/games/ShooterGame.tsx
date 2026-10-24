@@ -117,7 +117,7 @@ export function ShooterGame({ question, settings, autoStart, listenOnly, onListe
   }
 
   function keyboard(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === 'Escape' && active) { event.preventDefault(); dispatch({ type: 'pause' }); return; }
     if (!active && !recovering) return;
     if (/^[1-4]$/.test(event.key)) { event.preventDefault(); fire(Number(event.key) - 1); }
@@ -174,7 +174,7 @@ export function ShooterGame({ question, settings, autoStart, listenOnly, onListe
         </div>}
         <p>{state.phase === 'ready' ? '看中文或聽英文，點中正確泡泡。答錯也可以原地補練！' : '題目倒數已停止，不用著急。'}</p>
         <button className="primary" onClick={() => begin(state.phase === 'paused')}><Play size={18}/>{state.phase === 'ready' ? '開始射擊任務' : '繼續射擊'}</button>
-        <small className="shooting-key-hint">點一下發射 · 數字鍵 1–{options.length} · Esc 暫停</small>
+        <small className="shooting-key-hint">已記住你的節奏與接題設定<br/>點一下發射 · 數字鍵 1–{options.length} · Esc 暫停</small>
       </div></div>}
     </div>
     <div className={`shooter-dock ${finished ? correct ? 'dock-success' : 'dock-review' : ''}`} ref={feedback} tabIndex={-1}>

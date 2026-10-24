@@ -1,17 +1,18 @@
 import type { Progress, Result } from '../types';
 import { accuracy, localDay } from './engine';
+import { shooterPreferences } from './shooter';
 export const STORAGE_KEY='english-adventure-v1';
 export function resultBestKey(r: Pick<Result, 'grade' | 'game' | 'difficulty' | 'shooterPace'>) {
  return `${r.grade}-${r.game}-${r.difficulty}${r.game==='shooter'&&r.shooterPace==='relaxed'?'-relaxed':''}`;
 }
-export function freshProgress():Progress { return {version:1,settings:{grade:1,difficulty:'easy',topic:'all',sound:true,motion:true,rate:.85},history:[],mistakes:[],levels:{},coins:0,daily:[],totalPlayed:0,totalStars:0,best:{}}; }
+export function freshProgress():Progress { return {version:1,settings:{grade:1,difficulty:'easy',topic:'all',sound:true,motion:true,rate:.85,...shooterPreferences({})},history:[],mistakes:[],levels:{},coins:0,daily:[],totalPlayed:0,totalStars:0,best:{}}; }
 export function readProgress():Progress {try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return freshProgress();return validateProgress(JSON.parse(raw));}catch{return freshProgress();}}
 export function validateProgress(value:unknown):Progress {
  const base=freshProgress(); if(!value||typeof value!=='object')return base;
  const p=value as Partial<Progress>;
  if(p.version!==1)return base;
  const s=p.settings;
- if(s&&[1,2,3,4,5,6].includes(s.grade)&&['easy','normal','hard'].includes(s.difficulty))base.settings={grade:s.grade,difficulty:s.difficulty,topic:typeof s.topic==='string'?s.topic:'all',sound:s.sound!==false,motion:s.motion!==false,rate:[.65,.85,1,1.15].includes(s.rate)?s.rate:.85};
+ if(s&&[1,2,3,4,5,6].includes(s.grade)&&['easy','normal','hard'].includes(s.difficulty))base.settings={grade:s.grade,difficulty:s.difficulty,topic:typeof s.topic==='string'?s.topic:'all',sound:s.sound!==false,motion:s.motion!==false,rate:[.65,.85,1,1.15].includes(s.rate)?s.rate:.85,...shooterPreferences(s)};
  base.history=Array.isArray(p.history)?p.history.filter((r)=>r&&typeof r.id==='string'&&[1,2,3,4,5,6].includes(r.grade)&&Array.isArray(r.answers)&&r.answers.every(a=>a&&typeof a.questionId==='string'&&typeof a.correct==='boolean'&&typeof a.given==='string')&&Number.isFinite(r.score)&&r.score>=0&&Number.isFinite(r.seconds)&&r.seconds>=0&&Number.isInteger(r.stars)&&r.stars>=0&&r.stars<=3&&["easy","normal","hard"].includes(r.difficulty)&&["picture","memory","listening","spelling","speed","sentence","reading","adventure","shooter"].includes(r.game)&&typeof r.date==='string'&&(r.shooterPace===undefined||['challenge','relaxed'].includes(r.shooterPace))).slice(-300):[];
  base.mistakes=Array.isArray(p.mistakes)?[...new Set(p.mistakes.filter(x=>typeof x==='string'))]:[];
  if(p.levels&&typeof p.levels==='object') for(const [g,l] of Object.entries(p.levels))if(/^[1-6]$/.test(g)&&Array.isArray(l))base.levels[g]=l.slice(0,5).map(x=>Number.isInteger(x)&&x>=0&&x<=3?x:0);

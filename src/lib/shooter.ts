@@ -1,4 +1,18 @@
-import type { Difficulty } from '../types';
+import type { Answer, Difficulty, Settings, ShooterPace } from '../types';
+
+export function shooterPreferences(settings: Partial<Settings>) {
+  return {
+    shooterPace: (settings.shooterPace === 'relaxed' ? 'relaxed' : 'challenge') as ShooterPace,
+    shooterAutoNext: typeof settings.shooterAutoNext === 'boolean' ? settings.shooterAutoNext : true,
+    shooterListening: settings.shooterListening === true,
+  };
+}
+
+export function longestStreak(answers: Answer[]): number {
+  let current = 0, best = 0;
+  for (const answer of answers) { current = answer.correct ? current + 1 : 0; best = Math.max(best, current); }
+  return best;
+}
 
 export const shooterSeconds: Record<Difficulty, number> = { easy: 30, normal: 24, hard: 18 };
 export type Shot = { answer: string; x: number; y: number };
