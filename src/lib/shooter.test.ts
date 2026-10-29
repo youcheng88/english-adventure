@@ -79,6 +79,22 @@ describe('bubble shooter round lifecycle', () => {
     expect(expired).toEqual({ ...initial, phase: 'finished', remaining: 0 });
     expect(shooterReducer(expired, { type: 'fire', shot })).toBe(expired);
   });
+  it('settles time between display updates before accepting a shot at the deadline', () => {
+    const lastDisplay: ShooterState = { ...initial, phase: 'playing', remaining: 180 };
+    const expired = shooterReducer(lastDisplay, { type: 'tick', milliseconds: 200 });
+    expect(shooterReducer(expired, { type: 'fire', shot }).shot).toBeNull();
+    const justInTime = shooterReducer(lastDisplay, { type: 'tick', milliseconds: 179 });
+    expect(shooterReducer(justInTime, { type: 'fire', shot }).shot).toEqual(shot);
+  });
+  it('settles a partial display interval before pause without charging paused time', () => {
+    const lastDisplay: ShooterState = { ...initial, phase: 'playing', remaining: 500 };
+    const settled = shooterReducer(lastDisplay, { type: 'tick', milliseconds: 190 });
+    const paused = shooterReducer(settled, { type: 'pause' });
+    expect(shooterReducer(paused, { type: 'tick', milliseconds: 30000 }).remaining).toBe(310);
+    const resumed = shooterReducer(paused, { type: 'resume' });
+    expect(shooterReducer(resumed, { type: 'tick', milliseconds: 309 }).phase).toBe('playing');
+    expect(shooterReducer(resumed, { type: 'tick', milliseconds: 310 }).phase).toBe('finished');
+  });
   it('ignores invalid elapsed time', () => {
     const playing: ShooterState = { ...initial, phase: 'playing' };
     for (const milliseconds of [NaN, Infinity, -5000]) expect(shooterReducer(playing, { type: 'tick', milliseconds })).toBe(playing);

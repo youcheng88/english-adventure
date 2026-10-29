@@ -1,5 +1,5 @@
 import type { Progress, Result } from '../types';
-import { accuracy, localDay } from './engine';
+import { accuracy, localDay } from './catalog';
 import { shooterPreferences } from './shooter';
 export const STORAGE_KEY='english-adventure-v1';
 export function resultBestKey(r: Pick<Result, 'grade' | 'game' | 'difficulty' | 'shooterPace'>) {

@@ -1,0 +1,25 @@
+.header-inner{min-height:72px;padding-top:10px;padding-bottom:10px}
+.main-shell{padding-top:24px}
+.playing-header .header-inner{min-height:58px;padding-top:5px;padding-bottom:5px}
+.playing-header .brand-icon{width:35px;height:38px}
+.playing-header .brand strong{font-size:16px}
+.playing-header .brand small{display:none}
+.playing-main{padding-top:10px;padding-bottom:24px;min-height:85vh}
+.session-title{margin:8px 0 12px;gap:12px}
+.session-title h1{font-size:25px;margin:0}
+.session-title .title-icon{width:44px;height:44px;border-radius:12px}
+.session-toolbar{display:flex;align-items:flex-start;gap:10px;position:relative;margin-bottom:12px}
+.session-toolbar .session-stats{flex:1;margin:0;min-height:44px;padding:10px 15px;justify-content:flex-start;gap:24px}
+.session-options{position:relative;flex-shrink:0}
+.session-options>summary{display:flex;align-items:center;gap:7px;list-style:none;cursor:pointer;min-height:44px;padding:10px 12px;border:1px solid #dce5d8;border-radius:10px;background:#fff;font-size:12px;color:#55705e}
+.session-options>summary::-webkit-details-marker{display:none}
+.session-options-content{position:absolute;right:0;top:51px;z-index:15;width:260px;max-width:calc(100vw - 40px);padding:16px;border:1px solid #dce5d8;border-radius:12px;background:#fff;box-shadow:0 5px 14px #26473f16}
+.session-options-content label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+.session-options-content select{min-height:44px;font-size:12px}
+.elapsed-time{display:flex;align-items:center;gap:6px;font-size:12px;color:#6a7a6c;margin-top:12px}
+.question-progress{margin:9px 0}
+.game-panel{margin-top:12px}
+.loading-game{display:flex;justify-content:center;align-items:center;gap:12px;min-height:240px;color:#527b63;font-size:15px}
+.loading-dot{width:12px;height:12px;border-radius:50%;background:#75a98a;animation:loading-pulse 1s ease-in-out infinite}
+@keyframes loading-pulse{50%{opacity:.35}}
+@media(max-width:600px){.header-inner{gap:9px}.main-shell{padding-top:17px}.playing-header .header-inner{display:flex;flex-wrap:nowrap;gap:8px;min-height:56px}.playing-header .brand{flex:1;min-width:0}.playing-header .brand strong{font-size:14px}.playing-header .brand-icon{width:30px;height:33px}.playing-header .brand-icon svg{width:21px}.playing-header .header-tools{gap:4px}.playing-header .star-total{font-size:11px;padding:6px 8px}.playing-main{padding-top:7px}.session-title{margin:5px 0 10px}.session-title h1{font-size:21px}.session-title .title-icon{width:37px;height:37px}.session-title .title-icon svg{width:24px}.session-toolbar{gap:7px;margin-bottom:10px}.session-toolbar .session-stats{padding:9px 11px;gap:15px;font-size:12px}.session-options>summary{padding:9px;font-size:11px}.session-nav .text-button{min-height:44px}.question-progress{font-size:11px}.game-panel{padding:18px 13px}}

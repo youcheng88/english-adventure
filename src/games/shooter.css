@@ -94,3 +94,28 @@ html[data-motion=off] .pop-burst { display: none; }
 .shot-outcome { top: auto; left: auto; right: 12px; bottom: 14px; font-size: 13px; }
 .shot-outcome.hit { font-size: 15px; }
 .shooter { scroll-margin-top: 12px; }
+
+/* Keep secondary controls out of the playing area. */
+.shooter-options { position: relative; z-index: 12; }
+.shooter-options summary { display: flex; align-items: center; gap: 7px; min-height: 44px; padding: 6px 4px; cursor: pointer; list-style: none; font-size: 12px; color: #58715c; }
+.shooter-options summary::-webkit-details-marker { display: none; }
+.shooter-options summary::after { content: '⌄'; margin-left: 3px; }
+.shooter-options[open] summary::after { content: '⌃'; }
+.shooter-options>div { position: absolute; top: 44px; left: 0; width: min(270px, calc(100vw - 64px)); padding: 12px 16px; border: 1px solid #d7e1d4; border-radius: 13px; background: #fffefa; box-shadow: 0 7px 24px #1f433722; }
+.shooter-options label { min-height: 44px; font-size: 12px; }
+.shooter-options .shooter-rate { justify-content: space-between; gap: 10px; margin-top: 8px; }
+.shooter-options .shooter-rate select { min-height: 44px; max-width: 160px; padding: 7px 9px; font-size: 12px; }
+.shooter-options small { display: block; font-size: 10px; line-height: 1.6; margin-top: 8px; color: #667568; }
+.shooter-options .shooter-fallback { line-height: 1.6; margin: 8px 0 0; }
+.shooter-controls { margin-bottom: 6px; }
+.shooter-controls .text-button { min-height: 44px; }
+.shooting-time>span { width: 100%; transform-origin: left; transition: transform .25s linear; }
+.bubble-projectile { animation: star-shot-transform var(--flight-duration, 220ms) linear forwards; }
+.auto-advance>span { animation-duration: var(--next-duration, 1600ms); }
+.shooting-overlay { backdrop-filter: none; background: #13243bea; }
+.word-bubble { transition: outline-color .12s, background .12s; }
+.shooting-field:not(:focus-within) .word-bubble.targeted:enabled { outline: none; }
+@keyframes star-shot-transform {
+  from { transform: translate(-50%, -50%) scale(.8); opacity: 1; }
+  to { transform: translate(calc(-50% + var(--travel-x)), calc(-50% + var(--travel-y))) scale(1.6); opacity: 0; }
+}

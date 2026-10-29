@@ -15,7 +15,8 @@ export function longestStreak(answers: Answer[]): number {
 }
 
 export const shooterSeconds: Record<Difficulty, number> = { easy: 30, normal: 24, hard: 18 };
-export type Shot = { answer: string; x: number; y: number };
+export const shooterTiming = { tick: 250, flight: 220, advance: 1600 } as const;
+export type Shot = { answer: string; x: number; y: number; travelX?: number; travelY?: number };
 export interface ShooterState {
   phase: 'ready' | 'playing' | 'paused' | 'firing' | 'finished';
   remaining: number;
